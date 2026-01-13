@@ -630,6 +630,82 @@
             font-size: 12px;
         }
         
+        /* Setup Guide Styles */
+        .setup-section {
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .setup-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .setup-section h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+        
+        .setup-section p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        
+        .setup-section ol, .setup-section ul {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+        
+        .setup-section li {
+            margin-bottom: 4px;
+        }
+        
+        .setup-section code {
+            background: var(--bg-tertiary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+        
+        .setup-section a {
+            color: var(--accent);
+        }
+        
+        .setup-warning {
+            background: rgba(250, 166, 26, 0.1);
+            border-left: 3px solid var(--warning);
+            padding: 10px 12px;
+            border-radius: 4px;
+            font-size: 12px !important;
+        }
+        
+        .setup-table {
+            width: 100%;
+            font-size: 13px;
+            margin: 10px 0;
+            border-collapse: collapse;
+        }
+        
+        .setup-table td {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+        }
+        
+        .setup-table td:first-child {
+            width: 180px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            background: var(--bg-tertiary);
+        }
+        
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
@@ -863,7 +939,10 @@
                     <span>Initial Export to GitHub</span>
                 </button>
                 
-                <div style="margin-top: 16px; text-align: center;">
+                <div style="margin-top: 16px; text-align: center; display: flex; justify-content: center; gap: 16px;">
+                    <button onclick="showSetupGuide()" style="background: none; border: none; color: var(--accent); font-size: 11px; cursor: pointer; text-decoration: underline;">
+                        📖 Setup Guide
+                    </button>
                     <button onclick="clearCredentials()" style="background: none; border: none; color: var(--text-muted); font-size: 11px; cursor: pointer; text-decoration: underline;">
                         Clear saved credentials
                     </button>
@@ -993,6 +1072,121 @@ GitHub is the source of truth - all changes go through PRs."></textarea>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeNewModelModal()">Cancel</button>
                 <button class="btn btn-primary" onclick="createDataModelFromWizard()">Create Data Model</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Setup Guide Modal -->
+    <div class="modal-overlay" id="setupGuideModal">
+        <div class="modal" style="max-width: 700px;">
+            <div class="modal-header">
+                <div class="modal-title">📖 Setup Guide</div>
+                <button class="modal-close" onclick="closeSetupGuide()">&times;</button>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <div class="setup-section">
+                    <h3>Overview</h3>
+                    <p>This tool lets you manage Sigma data models as code using GitHub for version control. Changes are made here, committed to GitHub via PR, and automatically synced to Sigma when merged.</p>
+                </div>
+                
+                <div class="setup-section">
+                    <h3>Step 1: Get Sigma API Credentials</h3>
+                    <ol>
+                        <li>Log in to Sigma Computing</li>
+                        <li>Go to <strong>Administration</strong> → <strong>Developer Access</strong></li>
+                        <li>Click <strong>Create New</strong> under Client Credentials</li>
+                        <li>Copy the <strong>Client ID</strong> and <strong>Client Secret</strong></li>
+                    </ol>
+                    <p class="setup-warning">⚠️ Save the Client Secret immediately - you cannot view it again!</p>
+                </div>
+                
+                <div class="setup-section">
+                    <h3>Step 2: Set Up GitHub Repository</h3>
+                    <ol>
+                        <li>Create a new GitHub repository (or use an existing one)</li>
+                        <li>Create these folders:
+                            <ul>
+                                <li><code>.github/workflows/</code> - for automation</li>
+                                <li><code>scripts/</code> - for sync scripts</li>
+                                <li><code>data-models/</code> - for your JSON files</li>
+                            </ul>
+                        </li>
+                        <li>Add the workflow files (<code>sync-to-sigma.yml</code>, <code>pull-from-sigma.yml</code>) and Python scripts</li>
+                    </ol>
+                </div>
+                
+                <div class="setup-section">
+                    <h3>Step 3: Configure GitHub Secrets & Variables</h3>
+                    <p>Go to your repo: <strong>Settings</strong> → <strong>Secrets and variables</strong> → <strong>Actions</strong></p>
+                    
+                    <p><strong>Add Secrets:</strong></p>
+                    <table class="setup-table">
+                        <tr><td><code>SIGMA_CLIENT_ID</code></td><td>Your Sigma API Client ID</td></tr>
+                        <tr><td><code>SIGMA_SECRET</code></td><td>Your Sigma API Client Secret</td></tr>
+                    </table>
+                    
+                    <p><strong>Add Variables</strong> (click Variables tab):</p>
+                    <table class="setup-table">
+                        <tr><td><code>SIGMA_CLOUD</code></td><td><code>aws</code>, <code>azure</code>, or <code>gcp</code></td></tr>
+                        <tr><td><code>SIGMA_FOLDER_ID</code></td><td>Folder ID for new data models</td></tr>
+                    </table>
+                </div>
+                
+                <div class="setup-section">
+                    <h3>Step 4: Enable Workflow Permissions</h3>
+                    <ol>
+                        <li>Go to <strong>Settings</strong> → <strong>Actions</strong> → <strong>General</strong></li>
+                        <li>Under Workflow permissions, select <strong>"Read and write permissions"</strong></li>
+                        <li>Check <strong>"Allow GitHub Actions to create and approve pull requests"</strong></li>
+                        <li>Click <strong>Save</strong></li>
+                    </ol>
+                </div>
+                
+                <div class="setup-section">
+                    <h3>Step 5: Create GitHub Personal Access Token</h3>
+                    <ol>
+                        <li>Go to <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a></li>
+                        <li>Click <strong>Generate new token (classic)</strong></li>
+                        <li>Select only the <code>repo</code> scope</li>
+                        <li>Click <strong>Generate token</strong></li>
+                        <li>Copy the token (starts with <code>ghp_</code>)</li>
+                    </ol>
+                </div>
+                
+                <div class="setup-section">
+                    <h3>Step 6: Find Your Sigma Folder ID</h3>
+                    <ol>
+                        <li>In Sigma, navigate to the folder where you want data models created</li>
+                        <li>Look at the URL: <code>...sigmacomputing.com/.../folder/<strong>abc123xyz</strong></code></li>
+                        <li>The folder ID is the last part of the URL</li>
+                    </ol>
+                </div>
+                
+                <div class="setup-section">
+                    <h3>Using This Tool</h3>
+                    <ol>
+                        <li>Enter your Sigma credentials above and click <strong>Connect to Sigma</strong></li>
+                        <li>Enter your GitHub token and repo (format: <code>owner/repo-name</code>)</li>
+                        <li>Click <strong>Connect to GitHub</strong></li>
+                        <li>Select a data model to edit, or click <strong>+ New</strong> to create one</li>
+                        <li>Make changes and click <strong>Commit Changes</strong></li>
+                        <li>Review and merge the PR on GitHub</li>
+                        <li>Changes automatically sync to Sigma! ✅</li>
+                    </ol>
+                </div>
+                
+                <div class="setup-section">
+                    <h3>Syncing Changes from Sigma UI</h3>
+                    <p>If you edit a data model directly in Sigma's UI:</p>
+                    <ol>
+                        <li>Select the data model in this tool</li>
+                        <li>Click <strong>↻ Pull from Sigma</strong></li>
+                        <li>Click <strong>Commit Changes</strong> to save to GitHub</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeSetupGuide()">Got it!</button>
             </div>
         </div>
     </div>
@@ -1793,6 +1987,14 @@ GitHub is the source of truth - all changes go through PRs."></textarea>
         
         function closeNewModelModal() {
             document.getElementById('newModelModal').classList.remove('active');
+        }
+        
+        function showSetupGuide() {
+            document.getElementById('setupGuideModal').classList.add('active');
+        }
+        
+        function closeSetupGuide() {
+            document.getElementById('setupGuideModal').classList.remove('active');
         }
         
         let tableCounter = 0;
