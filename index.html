@@ -1103,15 +1103,17 @@ GitHub is the source of truth - all changes go through PRs."></textarea>
                 <div class="setup-section">
                     <h3>Step 2: Set Up GitHub Repository</h3>
                     <ol>
-                        <li>Create a new GitHub repository (or use an existing one)</li>
-                        <li>Create these folders:
+                        <li>Create a new private GitHub repository</li>
+                        <li><strong><a href="https://github.com/twells89/sigma-data-model-tool/tree/main/repo-template" target="_blank">Download the repo template files</a></strong> and copy them to your repository</li>
+                        <li>Your repo structure should look like:
                             <ul>
-                                <li><code>.github/workflows/</code> - for automation</li>
-                                <li><code>scripts/</code> - for sync scripts</li>
-                                <li><code>data-models/</code> - for your JSON files</li>
+                                <li><code>.github/workflows/</code> - automation workflows</li>
+                                <li><code>scripts/</code> - Python sync scripts</li>
+                                <li><code>data-models/</code> - your JSON files</li>
+                                <li><code>config.yml</code> - configuration</li>
                             </ul>
                         </li>
-                        <li>Add the workflow files (<code>sync-to-sigma.yml</code>, <code>pull-from-sigma.yml</code>) and Python scripts</li>
+                        <li>Commit and push these files to your repo</li>
                     </ol>
                 </div>
                 
