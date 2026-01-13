@@ -996,7 +996,6 @@
                             3. Click "Commit Changes"<br>
                             4. Review & merge PR on GitHub<br>
                             5. Sigma syncs automatically<br><br>
-                            <em>GitHub is the source of truth</em><br><br>
                             <strong>💾 Credentials auto-saved</strong><br>
                             <em>to browser localStorage</em>
                         </div>
@@ -1032,9 +1031,7 @@ WORKFLOW:
 4. Edit the JSON here
 5. Click 'Commit Changes' to create a PR
 6. Review and merge on GitHub
-7. Changes sync to Sigma automatically
-
-GitHub is the source of truth - all changes go through PRs."></textarea>
+7. Changes sync to Sigma automatically"></textarea>
                 </div>
             </div>
             
@@ -1427,7 +1424,7 @@ GitHub is the source of truth - all changes go through PRs."></textarea>
             return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') + '.json';
         }
         
-        // Load data model from GitHub (source of truth)
+        // Load data model from GitHub
         async function loadFromGitHub(sigmaSpec) {
             const fileName = getModelFileName(sigmaSpec);
             const filePath = state.github.path + fileName;
@@ -1448,7 +1445,7 @@ GitHub is the source of truth - all changes go through PRs."></textarea>
                     const content = decodeURIComponent(escape(atob(data.content)));
                     const jsonData = JSON.parse(content);
                     
-                    // Use GitHub version (source of truth)
+                    // Use GitHub version
                     document.getElementById('jsonEditor').value = JSON.stringify(jsonData, null, 2);
                     state.originalJson = JSON.stringify(jsonData, null, 2);
                     state.githubSha = data.sha;
