@@ -630,6 +630,18 @@
             font-size: 12px;
         }
         
+        .location-type-btn {
+            padding: 10px 16px;
+            font-size: 13px;
+            transition: all 0.15s ease;
+        }
+        
+        .location-type-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+        
         /* Setup Guide Styles */
         .setup-section {
             margin-bottom: 24px;
@@ -1051,6 +1063,34 @@ GitHub is the source of truth - all changes go through PRs."></textarea>
                 <div class="form-group">
                     <label class="form-label">Description</label>
                     <input type="text" class="form-input" id="newModelDescription" placeholder="Optional description">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Location *</label>
+                    <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                        <button type="button" class="btn btn-secondary location-type-btn active" id="locTypeWorkspace" onclick="selectLocationType('workspace')" style="flex: 1;">
+                            Workspace
+                        </button>
+                        <button type="button" class="btn btn-secondary location-type-btn" id="locTypePersonal" onclick="selectLocationType('personal')" style="flex: 1;">
+                            My Documents
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-group" id="workspaceGroup">
+                    <label class="form-label">Workspace *</label>
+                    <select class="form-input" id="newModelWorkspaceId" disabled>
+                        <option value="">Connect to Sigma first...</option>
+                    </select>
+                    <div class="form-hint">Select the workspace containing your target folder</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Folder *</label>
+                    <select class="form-input" id="newModelFolderId" disabled>
+                        <option value="">Select a workspace first...</option>
+                    </select>
+                    <div class="form-hint">Select the folder where the data model will be created</div>
                 </div>
                 
                 <div class="form-group">
@@ -1908,8 +1948,159 @@ GitHub is the source of truth - all changes go through PRs."></textarea>
         // Track wizard state
         let wizardState = {
             tables: [],
-            connections: []
+            connections: [],
+            workspaces: [],
+            folders: [],
+            locationType: 'workspace' // 'workspace' or 'personal'
         };
+        
+        function selectLocationType(type) {
+            wizardState.locationType = type;
+            
+            // Update button states
+            document.getElementById('locTypeWorkspace').classList.toggle('active', type === 'workspace');
+            document.getElementById('locTypePersonal').classList.toggle('active', type === 'personal');
+            
+            // Show/hide workspace dropdown
+            document.getElementById('workspaceGroup').style.display = type === 'workspace' ? 'block' : 'none';
+            
+            // Reset folder dropdown
+            const folderSelect = document.getElementById('newModelFolderId');
+            
+            if (type === 'workspace') {
+                folderSelect.innerHTML = '<option value="">Select a workspace first...</option>';
+                folderSelect.disabled = true;
+                // Reset workspace selection
+                document.getElementById('newModelWorkspaceId').value = '';
+            } else {
+                // Load personal folders (My Documents)
+                loadPersonalFolders();
+            }
+        }
+        
+        async function loadPersonalFolders() {
+            const select = document.getElementById('newModelFolderId');
+            select.innerHTML = '<option value="">Loading folders...</option>';
+            select.disabled = true;
+            
+            try {
+                // Get personal files/folders (no parentId = root/My Documents level)
+                const response = await fetch(`${state.baseUrl}/v2/files?typeFilters=folder`, {
+                    headers: { 'Authorization': `Bearer ${state.accessToken}` }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load folders');
+                
+                const data = await response.json();
+                wizardState.folders = data.entries || [];
+                
+                select.innerHTML = '';
+                
+                // Add "My Documents root" option
+                const rootOption = document.createElement('option');
+                rootOption.value = 'personal';
+                rootOption.textContent = '📁 My Documents (Root)';
+                select.appendChild(rootOption);
+                
+                // Add folders
+                wizardState.folders.forEach(folder => {
+                    const option = document.createElement('option');
+                    option.value = folder.id || folder.inodeId;
+                    option.textContent = '📁 ' + (folder.name || folder.id);
+                    select.appendChild(option);
+                });
+                
+                select.disabled = false;
+                
+            } catch (error) {
+                console.error('Failed to load personal folders:', error);
+                select.innerHTML = '<option value="">Failed to load folders</option>';
+                select.disabled = true;
+            }
+        }
+        
+        async function loadWorkspaces() {
+            const select = document.getElementById('newModelWorkspaceId');
+            select.innerHTML = '<option value="">Loading workspaces...</option>';
+            select.disabled = true;
+            
+            try {
+                const response = await fetch(`${state.baseUrl}/v2/workspaces`, {
+                    headers: { 'Authorization': `Bearer ${state.accessToken}` }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load workspaces');
+                
+                const data = await response.json();
+                wizardState.workspaces = data.entries || [];
+                
+                select.innerHTML = '<option value="">Select a workspace...</option>';
+                wizardState.workspaces.forEach(ws => {
+                    const option = document.createElement('option');
+                    option.value = ws.workspaceId;
+                    option.textContent = ws.name || ws.workspaceId;
+                    select.appendChild(option);
+                });
+                select.disabled = false;
+                
+                // Add change listener
+                select.onchange = function() {
+                    if (this.value) {
+                        loadFolders(this.value);
+                    } else {
+                        const folderSelect = document.getElementById('newModelFolderId');
+                        folderSelect.innerHTML = '<option value="">Select a workspace first...</option>';
+                        folderSelect.disabled = true;
+                    }
+                };
+                
+            } catch (error) {
+                console.error('Failed to load workspaces:', error);
+                select.innerHTML = '<option value="">Failed to load workspaces</option>';
+                select.disabled = true;
+            }
+        }
+        
+        async function loadFolders(workspaceId) {
+            const select = document.getElementById('newModelFolderId');
+            select.innerHTML = '<option value="">Loading folders...</option>';
+            select.disabled = true;
+            
+            try {
+                // Get files in the workspace, filter for folders
+                const response = await fetch(`${state.baseUrl}/v2/files?typeFilters=folder&parentId=${workspaceId}`, {
+                    headers: { 'Authorization': `Bearer ${state.accessToken}` }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load folders');
+                
+                const data = await response.json();
+                wizardState.folders = data.entries || [];
+                
+                select.innerHTML = '';
+                
+                // Add workspace root as an option
+                const rootOption = document.createElement('option');
+                rootOption.value = workspaceId;
+                rootOption.textContent = '📁 (Workspace Root)';
+                select.appendChild(rootOption);
+                
+                // Add folders
+                wizardState.folders.forEach(folder => {
+                    const option = document.createElement('option');
+                    option.value = folder.id || folder.inodeId;
+                    option.textContent = '📁 ' + (folder.name || folder.id);
+                    select.appendChild(option);
+                });
+                
+                select.disabled = false;
+                
+            } catch (error) {
+                console.error('Failed to load folders:', error);
+                select.innerHTML = '<option value="">Failed to load folders</option>';
+                select.disabled = true;
+            }
+        }
         
         async function loadConnections() {
             const select = document.getElementById('newModelConnectionId');
@@ -1966,9 +2157,25 @@ GitHub is the source of truth - all changes go through PRs."></textarea>
             
             // Reset wizard state
             wizardState.tables = [];
+            wizardState.locationType = 'workspace';
             document.getElementById('newModelName').value = '';
             document.getElementById('newModelDescription').value = '';
             document.getElementById('tablesContainer').innerHTML = '';
+            
+            // Reset location type buttons
+            document.getElementById('locTypeWorkspace').classList.add('active');
+            document.getElementById('locTypePersonal').classList.remove('active');
+            document.getElementById('workspaceGroup').style.display = 'block';
+            
+            // Reset workspace dropdown
+            const wsSelect = document.getElementById('newModelWorkspaceId');
+            wsSelect.innerHTML = '<option value="">Loading workspaces...</option>';
+            wsSelect.disabled = true;
+            
+            // Reset folder dropdown
+            const folderSelect = document.getElementById('newModelFolderId');
+            folderSelect.innerHTML = '<option value="">Select a workspace first...</option>';
+            folderSelect.disabled = true;
             
             // Reset connection dropdown
             const connSelect = document.getElementById('newModelConnectionId');
@@ -1983,7 +2190,8 @@ GitHub is the source of truth - all changes go through PRs."></textarea>
             // Show modal
             document.getElementById('newModelModal').classList.add('active');
             
-            // Load connections
+            // Load workspaces and connections
+            loadWorkspaces();
             loadConnections();
         }
         
@@ -2078,6 +2286,8 @@ GitHub is the source of truth - all changes go through PRs."></textarea>
         function createDataModelFromWizard() {
             const modelName = document.getElementById('newModelName').value.trim();
             const description = document.getElementById('newModelDescription').value.trim();
+            const workspaceId = document.getElementById('newModelWorkspaceId').value;
+            const folderId = document.getElementById('newModelFolderId').value;
             const connectionId = document.getElementById('newModelConnectionId').value.trim();
             
             if (!modelName) {
@@ -2085,10 +2295,24 @@ GitHub is the source of truth - all changes go through PRs."></textarea>
                 return;
             }
             
+            // Only require workspace if workspace location type is selected
+            if (wizardState.locationType === 'workspace' && !workspaceId) {
+                showToast('Please select a workspace', 'error');
+                return;
+            }
+            
+            if (!folderId) {
+                showToast('Please select a folder', 'error');
+                return;
+            }
+            
             if (!connectionId) {
                 showToast('Please select a connection', 'error');
                 return;
             }
+            
+            // Determine actual folder ID (for personal root, we may need to handle differently)
+            const actualFolderId = folderId === 'personal' ? null : folderId;
             
             // Gather table configurations
             const tableConfigs = document.querySelectorAll('.table-config');
@@ -2150,6 +2374,11 @@ GitHub is the source of truth - all changes go through PRs."></textarea>
                     }
                 ]
             };
+            
+            // Add folderId if a specific folder is selected (not personal root)
+            if (actualFolderId) {
+                template.folderId = actualFolderId;
+            }
             
             // Set up state for the new model
             state.selectedModel = template;
@@ -2316,7 +2545,5 @@ GitHub is the source of truth - all changes go through PRs."></textarea>
             }
         });
     </script>
-        <script data-goatcounter="https://tjwells89.goatcounter.com/count"
-        async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
