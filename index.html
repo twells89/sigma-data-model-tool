@@ -55,7 +55,7 @@
             border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            overflow: visible;
         }
         
         .sidebar-header {
@@ -98,6 +98,8 @@
         .credentials-section {
             padding: 20px 24px;
             border-bottom: 1px solid var(--border);
+            overflow: visible;
+            position: relative;
         }
         
         .section-title {
@@ -809,10 +811,10 @@
         .tooltip-text {
             visibility: hidden;
             position: absolute;
-            z-index: 100;
-            top: calc(100% + 8px);
-            left: 50%;
-            transform: translateX(-50%);
+            z-index: 1000;
+            left: calc(100% + 12px);
+            top: 50%;
+            transform: translateY(-50%);
             background: var(--bg-tertiary);
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -829,21 +831,21 @@
         .tooltip-text::before {
             content: '';
             position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
+            right: 100%;
+            top: 50%;
+            transform: translateY(-50%);
             border: 6px solid transparent;
-            border-bottom-color: var(--border);
+            border-right-color: var(--border);
         }
 
         .tooltip-text::after {
             content: '';
             position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
+            right: 100%;
+            top: 50%;
+            transform: translateY(-50%);
             border: 5px solid transparent;
-            border-bottom-color: var(--bg-tertiary);
+            border-right-color: var(--bg-tertiary);
         }
 
         .tooltip-container:hover .tooltip-text {
