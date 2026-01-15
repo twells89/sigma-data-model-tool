@@ -810,7 +810,7 @@
             visibility: hidden;
             position: absolute;
             z-index: 100;
-            bottom: 125%;
+            top: calc(100% + 8px);
             left: 50%;
             transform: translateX(-50%);
             background: var(--bg-tertiary);
@@ -826,40 +826,29 @@
             transition: opacity 0.2s ease;
         }
 
+        .tooltip-text::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-bottom-color: var(--border);
+        }
+
+        .tooltip-text::after {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-bottom-color: var(--bg-tertiary);
+        }
+
         .tooltip-container:hover .tooltip-text {
             visibility: visible;
             opacity: 1;
-        }
-
-        /* Cloud selector */
-        .cloud-selector {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 14px;
-        }
-
-        .cloud-option {
-            flex: 1;
-            padding: 8px 12px;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.15s ease;
-        }
-
-        .cloud-option:hover {
-            background: var(--bg-hover);
-        }
-
-        .cloud-option.active {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: white;
         }
 
         /* Badge */
@@ -897,12 +886,37 @@
                 <div class="section-title">API Credentials</div>
                 
                 <div class="form-group">
-                    <label>Sigma Cloud</label>
-                    <div class="cloud-selector">
-                        <div class="cloud-option active" data-cloud="aws" onclick="selectCloud('aws')">AWS</div>
-                        <div class="cloud-option" data-cloud="azure" onclick="selectCloud('azure')">Azure</div>
-                        <div class="cloud-option" data-cloud="gcp" onclick="selectCloud('gcp')">GCP</div>
-                    </div>
+                    <label>
+                        API Base URL
+                        <span class="tooltip-container">
+                            <span class="tooltip-icon">?</span>
+                            <span class="tooltip-text">
+                                Find your organization's API base URL in:<br><br>
+                                <strong>Administration → Developer Access → API base URL</strong><br><br>
+                                Then select the matching region from the dropdown.
+                            </span>
+                        </span>
+                    </label>
+                    <select id="apiRegion" onchange="selectRegion()">
+                        <optgroup label="GCP">
+                            <option value="https://api.sigmacomputing.com">api.sigmacomputing.com (GCP US)</option>
+                            <option value="https://api.sa.gcp.sigmacomputing.com">api.sa.gcp.sigmacomputing.com (GCP KSA)</option>
+                        </optgroup>
+                        <optgroup label="AWS">
+                            <option value="https://aws-api.sigmacomputing.com">aws-api.sigmacomputing.com (AWS US West)</option>
+                            <option value="https://api.us-a.aws.sigmacomputing.com">api.us-a.aws.sigmacomputing.com (AWS US East)</option>
+                            <option value="https://api.ca.aws.sigmacomputing.com">api.ca.aws.sigmacomputing.com (AWS Canada)</option>
+                            <option value="https://api.eu.aws.sigmacomputing.com">api.eu.aws.sigmacomputing.com (AWS Europe)</option>
+                            <option value="https://api.au.aws.sigmacomputing.com">api.au.aws.sigmacomputing.com (AWS Australia/APAC)</option>
+                            <option value="https://api.uk.aws.sigmacomputing.com">api.uk.aws.sigmacomputing.com (AWS UK)</option>
+                        </optgroup>
+                        <optgroup label="Azure">
+                            <option value="https://api.us.azure.sigmacomputing.com">api.us.azure.sigmacomputing.com (Azure US)</option>
+                            <option value="https://api.eu.azure.sigmacomputing.com">api.eu.azure.sigmacomputing.com (Azure Europe)</option>
+                            <option value="https://api.ca.azure.sigmacomputing.com">api.ca.azure.sigmacomputing.com (Azure Canada)</option>
+                            <option value="https://api.uk.azure.sigmacomputing.com">api.uk.azure.sigmacomputing.com (Azure UK)</option>
+                        </optgroup>
+                    </select>
                 </div>
                 
                 <div class="form-group">
@@ -1275,7 +1289,7 @@ WORKFLOW:
             const sigmaData = {
                 clientId: document.getElementById('clientId').value,
                 clientSecret: document.getElementById('clientSecret').value,
-                cloud: state.cloud
+                apiUrl: document.getElementById('apiRegion').value
             };
             
             const githubData = {
@@ -1296,8 +1310,9 @@ WORKFLOW:
                 if (sigmaData) {
                     document.getElementById('clientId').value = sigmaData.clientId || '';
                     document.getElementById('clientSecret').value = sigmaData.clientSecret || '';
-                    if (sigmaData.cloud) {
-                        selectCloud(sigmaData.cloud);
+                    if (sigmaData.apiUrl) {
+                        document.getElementById('apiRegion').value = sigmaData.apiUrl;
+                        state.baseUrl = sigmaData.apiUrl;
                     }
                 }
                 
@@ -1344,21 +1359,10 @@ WORKFLOW:
             }
         }
         
-        // Cloud URLs
-        const cloudUrls = {
-            aws: 'https://aws-api.sigmacomputing.com',
-            azure: 'https://api.us.azure.sigmacomputing.com',
-            gcp: 'https://api.sigmacomputing.com'
-        };
-        
-        // Select cloud
-        function selectCloud(cloud) {
-            state.cloud = cloud;
-            state.baseUrl = cloudUrls[cloud];
-            
-            document.querySelectorAll('.cloud-option').forEach(el => {
-                el.classList.toggle('active', el.dataset.cloud === cloud);
-            });
+        // Select API region
+        function selectRegion() {
+            const select = document.getElementById('apiRegion');
+            state.baseUrl = select.value;
         }
         
         // Connect to GitHub
@@ -1852,6 +1856,9 @@ WORKFLOW:
         async function connect() {
             const clientId = document.getElementById('clientId').value.trim();
             const clientSecret = document.getElementById('clientSecret').value.trim();
+            
+            // Ensure base URL is set from the dropdown
+            state.baseUrl = document.getElementById('apiRegion').value;
             
             if (!clientId || !clientSecret) {
                 showToast('Please enter both Client ID and Client Secret', 'error');
