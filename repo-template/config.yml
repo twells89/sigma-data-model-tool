@@ -1,19 +1,28 @@
-# Sigma Data Models Configuration
-# This file tracks the mapping between local JSON files and Sigma data model IDs
+# Sigma Computing Configuration
+# This file is automatically managed by the Data Model Manager HTML app
+# 
+# ⚠️ IMPORTANT: If you're using the HTML app, DO NOT manually edit this file!
+# The app will automatically save the correct API URL when you connect to GitHub.
+#
+# 📝 ONLY USE THIS TEMPLATE if you're NOT using the HTML app and want to
+# manually create config.yml. In that case, replace the sigma_api_url below
+# with your Sigma instance's API URL.
 
-# Your Sigma cloud: aws, azure, or gcp
-sigma_cloud: aws
-
-# Data model mappings (auto-populated by sync scripts)
-# Format:
-#   <dataModelId>:
-#     file: <filename.json>
-#     name: <display name>
-#     last_synced: <timestamp>
-data_models: {}
+# API URL for your Sigma instance
+# Find your URL in the Sigma app: check the URL bar when logged in
+# Common URLs by region:
+#   - AWS US West:     https://aws-api.sigmacomputing.com
+#   - GCP US:          https://api.sigmacomputing.com
+#   - Azure US:        https://api.us.azure.sigmacomputing.com
+#   - Azure Europe:    https://api.eu.azure.sigmacomputing.com
+#   - Azure Canada:    https://api.ca.azure.sigmacomputing.com
+#   - Azure UK:        https://api.uk.azure.sigmacomputing.com
+sigma_api_url: https://api.sigmacomputing.com  # ← CHANGE THIS TO YOUR REGION
 
 # Optional: Default folder ID for new data models
-# default_folder_id: null
+# Find this in Sigma by opening a folder and checking the URL: /folder/FOLDER_ID
+# default_folder_id: your-folder-id-here
 
-# Optional: Connection ID to use for new data models
-# default_connection_id: null
+# Data model mappings (automatically managed by sync scripts)
+# Do not edit this section manually
+data_models: {}
