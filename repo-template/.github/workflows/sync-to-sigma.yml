@@ -40,9 +40,9 @@ jobs:
           done
           echo "✅ All JSON files are valid"
 
-  # ── 2. Sigma CI — drift + blast radius (PRs only) ────────────────────────────
+  # ── 2. Sigma Sentinel — drift, blast radius, and formula check (PRs only) ──────
   sigma-validate:
-    name: "Sigma CI — Drift & Blast Radius"
+    name: "Sigma Sentinel — Drift, Blast Radius & Formula Check"
     runs-on: ubuntu-latest
     needs: validate
     if: github.event_name == 'pull_request'
@@ -73,7 +73,7 @@ jobs:
 
           if [ -z "$CHANGED" ]; then
             echo "model_ids=" >> "$GITHUB_OUTPUT"
-            echo "No changed data model files found — skipping sigma-ci"
+            echo "No changed data model files found — skipping Sigma Sentinel"
             exit 0
           fi
 
@@ -81,12 +81,12 @@ jobs:
           echo "model_ids=$MODEL_IDS" >> "$GITHUB_OUTPUT"
 
           if [ -z "$MODEL_IDS" ]; then
-            echo "⚠️  Changed files not yet mapped in config.yml (new models). Skipping sigma-ci."
+            echo "⚠️  Changed files not yet mapped in config.yml (new models). Skipping Sigma Sentinel."
           else
             echo "Validating model IDs: $MODEL_IDS"
           fi
 
-      - name: Run Sigma CI validation
+      - name: Run Sigma Sentinel validation
         id: sigma-ci
         if: steps.models.outputs.model_ids != ''
         uses: twells89/sigma-ci@main
@@ -95,19 +95,23 @@ jobs:
           sigma-client-secret: ${{ secrets.SIGMA_SECRET }}
           model-ids: ${{ steps.models.outputs.model_ids }}
           fail-on-drift: 'true'
+          fail-on-formula-errors: 'false'
 
       - name: Post validation result as PR comment
-        # Run even when sigma-ci fails (drift detected) so the PR shows the report
+        # Run even when the action fails (drift detected) so the PR always shows the report
         if: always() && steps.models.outputs.model_ids != ''
         env:
           GH_TOKEN: ${{ github.token }}
           HAS_DRIFT: ${{ steps.sigma-ci.outputs.has-drift }}
+          HAS_FORMULA_ERRORS: ${{ steps.sigma-ci.outputs.has-formula-errors }}
           SIGMA_REPORT: ${{ steps.sigma-ci.outputs.report-markdown }}
         run: |
           if [ "$HAS_DRIFT" = "true" ]; then
-            HEADER="## ❌ Sigma CI — Drift Detected (merge blocked)"
+            HEADER="## ❌ Sigma Sentinel — Drift Detected (merge blocked)"
+          elif [ "$HAS_FORMULA_ERRORS" = "true" ]; then
+            HEADER="## ⚠️ Sigma Sentinel — Formula Errors Detected"
           else
-            HEADER="## ✅ Sigma CI — Validation Passed"
+            HEADER="## ✅ Sigma Sentinel — Validation Passed"
           fi
 
           {
@@ -116,10 +120,10 @@ jobs:
             echo "$SIGMA_REPORT"
             echo ""
             echo "---"
-            echo "*Validated by [sigma-ci](https://github.com/twells89/sigma-ci)*"
-          } > sigma_ci_comment.md
+            echo "*Validated by [Sigma Sentinel](https://github.com/twells89/sigma-ci)*"
+          } > sigma_sentinel_comment.md
 
-          gh pr comment "${{ github.event.pull_request.number }}" --body-file sigma_ci_comment.md
+          gh pr comment "${{ github.event.pull_request.number }}" --body-file sigma_sentinel_comment.md
 
   # ── 3. Spec diff report (PRs only, unchanged) ────────────────────────────────
   diff-report:
