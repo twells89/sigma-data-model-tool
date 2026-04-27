@@ -1699,7 +1699,7 @@ data_models: {}
                 const dataModelId = state.selectedModelMeta.dataModelId;
                 
                 // Fetch latest spec from Sigma
-                const response = await fetch(`${state.baseUrl}/v3alpha/datamodels/${dataModelId}/spec`, {
+                const response = await fetch(`${state.baseUrl}/v2/datamodels/${dataModelId}/spec`, {
                     headers: {
                         'Authorization': `Bearer ${state.accessToken}`
                     }
@@ -1957,7 +1957,7 @@ data_models: {}
                 
                 try {
                     // Fetch the full spec
-                    const specResponse = await fetch(`${state.baseUrl}/v3alpha/datamodels/${model.dataModelId}/spec`, {
+                    const specResponse = await fetch(`${state.baseUrl}/v2/datamodels/${model.dataModelId}/spec`, {
                         headers: {
                             'Authorization': `Bearer ${state.accessToken}`
                         }
@@ -2749,8 +2749,8 @@ data_models: {}
             state.selectedModelMeta = state.dataModels.find(m => m.dataModelId === dataModelId);
             
             try {
-                // Fetch the JSON representation using v3alpha endpoint
-                const response = await fetch(`${state.baseUrl}/v3alpha/datamodels/${dataModelId}/spec`, {
+                // Fetch the JSON representation using v2 endpoint
+                const response = await fetch(`${state.baseUrl}/v2/datamodels/${dataModelId}/spec`, {
                     headers: {
                         'Authorization': `Bearer ${state.accessToken}`
                     }
