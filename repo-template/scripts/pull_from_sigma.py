@@ -137,7 +137,7 @@ class SigmaClient:
         for attempt in range(4):
             try:
                 response = requests.get(
-                    f"{self.base_url}/v3alpha/datamodels/{data_model_id}/spec",
+                    f"{self.base_url}/v2/datamodels/{data_model_id}/spec",
                     headers=self._headers(),
                     timeout=30,
                 )

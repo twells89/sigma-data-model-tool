@@ -140,7 +140,7 @@ class SigmaClient:
         for attempt in range(4):
             try:
                 response = requests.get(
-                    f"{self.base_url}/v3alpha/datamodels/{data_model_id}/spec",
+                    f"{self.base_url}/v2/datamodels/{data_model_id}/spec",
                     headers=self._headers(),
                     timeout=30,
                 )
@@ -161,7 +161,7 @@ class SigmaClient:
     def create_data_model(self, spec):
         """Create a new data model from a JSON spec."""
         response = requests.post(
-            f"{self.base_url}/v3alpha/datamodels/spec",
+            f"{self.base_url}/v2/datamodels/spec",
             headers=self._headers(),
             json=spec
         )
@@ -174,7 +174,7 @@ class SigmaClient:
     def update_data_model(self, data_model_id, spec):
         """Update an existing data model from a JSON spec."""
         response = requests.put(
-            f"{self.base_url}/v3alpha/datamodels/{data_model_id}/spec",
+            f"{self.base_url}/v2/datamodels/{data_model_id}/spec",
             headers=self._headers(),
             json=spec
         )
